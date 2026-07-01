@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>최종검사 POP - 무게 자동 I/F</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Malgun Gothic", "Apple SD Gothic Neo", Arial, sans-serif;
+      background: #f3f6f8;
+      color: #17202a;
+    }
+
+    .pop-wrap {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .top-bar {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 18px;
+      align-items: center;
+      padding: 18px 28px;
+      background: #22313f;
+      color: #fff;
+    }
+
+    .title-area h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: 0;
+    }
+
+    .title-meta {
+      display: flex;
+      gap: 18px;
+      flex-wrap: wrap;
+      font-size: 15px;
+      color: #dce6ef;
+    }
+
+    .date-box {
+      min-width: 190px;
+      padding: 12px 16px;
+      border: 1px solid #536a7f;
+      border-radius: 6px;
+      text-align: center;
+      background: #2f4356;
+    }
+
+    .date-label {
+      display: block;
+      margin-bottom: 4px;
+      color: #b9c9d7;
+      font-size: 13px;
+    }
+
+    .date-value {
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .content {
+      display: grid;
+      grid-template-columns: minmax(480px, 1.35fr) minmax(360px, 0.8fr);
+      gap: 18px;
+      flex: 1;
+      padding: 18px;
+    }
+
+    .panel {
+      background: #fff;
+      border: 1px solid #d6dde3;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(23, 32, 42, 0.06);
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 16px;
+      border-bottom: 1px solid #e3e8ed;
+      background: #fafbfc;
+    }
+
+    .panel-header h2 {
+      margin: 0;
+      font-size: 19px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 30px;
+      padding: 5px 10px;
+      border-radius: 4px;
+      background: #e8f3ff;
+      color: #1d5d9b;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .work-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    .work-table th,
+    .work-table td {
+      padding: 13px 12px;
+      border-bottom: 1px solid #e7ecef;
+      text-align: left;
+      font-size: 15px;
+      word-break: keep-all;
+    }
+
+    .work-table th {
+      background: #eef2f5;
+      color: #364653;
+      font-weight: 700;
+    }
+
+    .work-table tr {
+      cursor: pointer;
+    }
+
+    .work-table tbody tr:hover {
+      background: #f7fbff;
+    }
+
+    .work-table tr.selected {
+      background: #dff0ff;
+      outline: 2px solid #2483d0;
+      outline-offset: -2px;
+    }
+
+    .detail-body {
+      display: grid;
+      gap: 16px;
+      padding: 16px;
+    }
+
+    .selected-order {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .info-box {
+      min-height: 74px;
+      padding: 11px 12px;
+      border: 1px solid #dce3e8;
+      border-radius: 6px;
+      background: #fbfcfd;
+    }
+
+    .info-label {
+      display: block;
+      margin-bottom: 8px;
+      color: #667684;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .info-value {
+      display: block;
+      color: #17202a;
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .scale-area {
+      display: grid;
+      gap: 12px;
+      padding: 16px;
+      border: 2px solid #c8d7e2;
+      border-radius: 8px;
+      background: #f7fafc;
+    }
+
+    .scale-display {
+      display: flex;
+      align-items: baseline;
+      justify-content: center;
+      min-height: 112px;
+      border: 2px solid #25313b;
+      border-radius: 6px;
+      background: #111820;
+      color: #43f28f;
+      font-family: "Consolas", "Courier New", monospace;
+    }
+
+    .weight-value {
+      font-size: 52px;
+      font-weight: 700;
+      letter-spacing: 0;
+    }
+
+    .weight-unit {
+      margin-left: 10px;
+      font-size: 24px;
+      font-weight: 700;
+    }
+
+    .button-row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    button {
+      min-height: 54px;
+      border: 0;
+      border-radius: 6px;
+      color: #fff;
+      font-size: 17px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.45;
+    }
+
+    .btn-start {
+      background: #168a4a;
+    }
+
+    .btn-end {
+      background: #b83b35;
+    }
+
+    .btn-interface {
+      grid-column: 1 / -1;
+      background: #1f6fb2;
+      font-size: 20px;
+    }
+
+    .btn-confirm {
+      grid-column: 1 / -1;
+      background: #2f4050;
+    }
+
+    .process-flow {
+      padding: 16px;
+      border-top: 1px solid #e3e8ed;
+      background: #fafbfc;
+    }
+
+    .process-flow h3 {
+      margin: 0 0 12px;
+      font-size: 17px;
+    }
+
+    .flow-list {
+      display: grid;
+      gap: 8px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .flow-list li {
+      display: grid;
+      grid-template-columns: 28px 1fr;
+      gap: 8px;
+      align-items: center;
+      min-height: 38px;
+      padding: 6px 8px;
+      border: 1px solid #dce3e8;
+      border-radius: 6px;
+      background: #fff;
+      font-size: 14px;
+    }
+
+    .flow-no {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #22313f;
+      color: #fff;
+      font-weight: 700;
+    }
+
+    .message-box {
+      min-height: 44px;
+      padding: 12px;
+      border-radius: 6px;
+      background: #fff7df;
+      color: #71530c;
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    @media (max-width: 960px) {
+      .top-bar,
+      .content {
+        grid-template-columns: 1fr;
+      }
+
+      .date-box {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="pop-wrap">
+    <header class="top-bar">
+      <div class="title-area">
+        <h1>굴착기 카운터웨이트 최종검사 POP</h1>
+        <div class="title-meta">
+          <span>공정명 : <strong>최종검사</strong></span>
+          <span>작업자 : <strong>조병철</strong></span>
+          <span>설비 : <strong>디지털저울 자동 I/F</strong></span>
+        </div>
+      </div>
+      <div class="date-box">
+        <span class="date-label">오늘 날짜</span>
+        <span class="date-value" id="today"></span>
+      </div>
+    </header>
+
+    <main class="content">
+      <section class="panel">
+        <div class="panel-header">
+          <h2>작업지시 목록</h2>
+          <span class="status-badge" id="workStatus">작업대기</span>
+        </div>
+        <table class="work-table">
+          <thead>
+            <tr>
+              <th>품번</th>
+              <th>수량</th>
+              <th>모델</th>
+              <th>생산번호</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="selected" data-part="CW-360LC-001" data-qty="4" data-model="HX360" data-serial="P20260617-001" data-weight="2840">
+              <td>CW-360LC-001</td>
+              <td>4 EA</td>
+              <td>HX360</td>
+              <td>P20260617-001</td>
+            </tr>
+            <tr data-part="CW-300LC-014" data-qty="6" data-model="HX300" data-serial="P20260617-002" data-weight="2385">
+              <td>CW-300LC-014</td>
+              <td>6 EA</td>
+              <td>HX300</td>
+              <td>P20260617-002</td>
+            </tr>
+            <tr data-part="CW-220LC-021" data-qty="8" data-model="HX220" data-serial="P20260617-003" data-weight="1715">
+              <td>CW-220LC-021</td>
+              <td>8 EA</td>
+              <td>HX220</td>
+              <td>P20260617-003</td>
+            </tr>
+            <tr data-part="CW-520LC-008" data-qty="2" data-model="HX520" data-serial="P20260617-004" data-weight="4160">
+              <td>CW-520LC-008</td>
+              <td>2 EA</td>
+              <td>HX520</td>
+              <td>P20260617-004</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <aside class="panel">
+        <div class="panel-header">
+          <h2>무게 측정 / 확정</h2>
+          <span class="status-badge" id="ifStatus">I/F 대기</span>
+        </div>
+
+        <div class="detail-body">
+          <div class="selected-order">
+            <div class="info-box">
+              <span class="info-label">선택 품번</span>
+              <span class="info-value" id="selectedPart">CW-360LC-001</span>
+            </div>
+            <div class="info-box">
+              <span class="info-label">생산번호</span>
+              <span class="info-value" id="selectedSerial">P20260617-001</span>
+            </div>
+            <div class="info-box">
+              <span class="info-label">모델</span>
+              <span class="info-value" id="selectedModel">HX360</span>
+            </div>
+            <div class="info-box">
+              <span class="info-label">지시수량</span>
+              <span class="info-value" id="selectedQty">4 EA</span>
+            </div>
+          </div>
+
+          <div class="scale-area">
+            <div class="scale-display">
+              <span class="weight-value" id="weightValue">----.-</span>
+              <span class="weight-unit">kg</span>
+            </div>
+            <button type="button" class="btn-interface" id="interfaceBtn">무게 자동 I/F</button>
+            <button type="button" class="btn-confirm" id="confirmBtn" disabled>측정 무게 확정</button>
+            <div class="button-row">
+              <button type="button" class="btn-start" id="startBtn">작업시작</button>
+              <button type="button" class="btn-end" id="endBtn" disabled>작업종료</button>
+            </div>
+            <div class="message-box" id="messageBox">작업지시를 선택한 뒤 작업시작 버튼을 클릭하세요.</div>
+          </div>
+        </div>
+
+        <div class="process-flow">
+          <h3>공정순서</h3>
+          <ol class="flow-list">
+            <li><span class="flow-no">1</span><span>작업지시 목록에서 작업지시 선택</span></li>
+            <li><span class="flow-no">2</span><span>작업시작 버튼 클릭</span></li>
+            <li><span class="flow-no">3</span><span>무게 자동 I/F 버튼 클릭</span></li>
+            <li><span class="flow-no">4</span><span>측정된 무게가 저울에서 POP 화면으로 자동 I/F</span></li>
+            <li><span class="flow-no">5</span><span>저울에서 I/F된 무게 조회 후 확정</span></li>
+            <li><span class="flow-no">6</span><span>작업종료 버튼 클릭</span></li>
+          </ol>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <script>
+    const today = new Date();
+    const todayText = today.toLocaleDateString("ko-KR", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      weekday: "short"
+    });
+
+    document.getElementById("today").textContent = todayText;
+
+    const rows = document.querySelectorAll(".work-table tbody tr");
+    const selectedPart = document.getElementById("selectedPart");
+    const selectedSerial = document.getElementById("selectedSerial");
+    const selectedModel = document.getElementById("selectedModel");
+    const selectedQty = document.getElementById("selectedQty");
+    const weightValue = document.getElementById("weightValue");
+    const workStatus = document.getElementById("workStatus");
+    const ifStatus = document.getElementById("ifStatus");
+    const messageBox = document.getElementById("messageBox");
+    const startBtn = document.getElementById("startBtn");
+    const endBtn = document.getElementById("endBtn");
+    const interfaceBtn = document.getElementById("interfaceBtn");
+    const confirmBtn = document.getElementById("confirmBtn");
+
+    let currentWeight = "";
+    let isStarted = false;
+    let isConfirmed = false;
+
+    function setMessage(text) {
+      messageBox.textContent = text;
+    }
+
+    function getSelectedRow() {
+      return document.querySelector(".work-table tbody tr.selected");
+    }
+
+    function updateSelectedOrder(row) {
+      selectedPart.textContent = row.dataset.part;
+      selectedSerial.textContent = row.dataset.serial;
+      selectedModel.textContent = row.dataset.model;
+      selectedQty.textContent = `${row.dataset.qty} EA`;
+      currentWeight = "";
+      isConfirmed = false;
+      weightValue.textContent = "----.-";
+      ifStatus.textContent = "I/F 대기";
+      confirmBtn.disabled = true;
+      endBtn.disabled = true;
+      if (isStarted) {
+        setMessage("선택한 작업지시가 변경되었습니다. 무게 자동 I/F를 진행하세요.");
+      } else {
+        setMessage("작업지시를 선택한 뒤 작업시작 버튼을 클릭하세요.");
+      }
+    }
+
+    rows.forEach((row) => {
+      row.addEventListener("click", () => {
+        rows.forEach((item) => item.classList.remove("selected"));
+        row.classList.add("selected");
+        updateSelectedOrder(row);
+      });
+    });
+
+    startBtn.addEventListener("click", () => {
+      isStarted = true;
+      isConfirmed = false;
+      workStatus.textContent = "작업중";
+      startBtn.disabled = true;
+      endBtn.disabled = true;
+      setMessage("작업이 시작되었습니다. 무게 자동 I/F 버튼을 클릭하세요.");
+    });
+
+    interfaceBtn.addEventListener("click", () => {
+      if (!isStarted) {
+        setMessage("작업시작 후 무게 자동 I/F를 진행할 수 있습니다.");
+        return;
+      }
+
+      const row = getSelectedRow();
+      const baseWeight = Number(row.dataset.weight);
+      const measuredWeight = baseWeight + (Math.random() * 1.6 - 0.8);
+      currentWeight = measuredWeight.toFixed(1);
+      weightValue.textContent = currentWeight;
+      ifStatus.textContent = "I/F 완료";
+      confirmBtn.disabled = false;
+      setMessage(`디지털저울에서 ${currentWeight} kg이 자동 수신되었습니다. 측정 무게를 확인 후 확정하세요.`);
+    });
+
+    confirmBtn.addEventListener("click", () => {
+      if (!currentWeight) {
+        setMessage("확정할 측정 무게가 없습니다.");
+        return;
+      }
+
+      isConfirmed = true;
+      confirmBtn.disabled = true;
+      endBtn.disabled = false;
+      ifStatus.textContent = "무게 확정";
+      setMessage(`${selectedPart.textContent} / ${selectedSerial.textContent} 무게 ${currentWeight} kg이 확정되었습니다.`);
+    });
+
+    endBtn.addEventListener("click", () => {
+      if (!isConfirmed) {
+        setMessage("측정 무게 확정 후 작업종료가 가능합니다.");
+        return;
+      }
+
+      isStarted = false;
+      isConfirmed = false;
+      workStatus.textContent = "작업완료";
+      ifStatus.textContent = "I/F 대기";
+      startBtn.disabled = false;
+      endBtn.disabled = true;
+      setMessage("작업이 종료되었습니다. 다음 작업지시를 선택하세요.");
+    });
+  </script>
+</body>
+</html>
