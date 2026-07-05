@@ -1,0 +1,31 @@
+name: Refresh crawling page
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 0 * * *"
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Regenerate crawling page
+        run: python3 crawling/web_crawling.py
+
+      - name: Commit updated page
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: Refresh crawling page data
+          file_pattern: crawling/index.html

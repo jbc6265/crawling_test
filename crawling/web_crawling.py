@@ -195,6 +195,21 @@ def build_html(items):
       font-weight: 700;
     }
 
+    .refresh-button {
+      width: auto;
+      min-height: 30px;
+      padding: 0 10px;
+      border-color: #9ce7dc;
+      background: transparent;
+      color: #9ce7dc;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .refresh-button:hover {
+      background: rgba(156, 231, 220, 0.12);
+    }
+
     .summary-box {
       min-width: 190px;
       padding: 12px 16px;
@@ -408,6 +423,7 @@ def build_html(items):
           <span>수집 범위: 1페이지 ~ 20페이지</span>
           <span>생성일시: __GENERATED_AT__</span>
           <a href="https://www.bizinfo.go.kr/sii/siia/selectSIIA200View.do?rows=15&cpage=1" target="_blank" rel="noopener">원본 사이트 열기</a>
+          <button id="refreshPageButton" type="button" class="refresh-button">최신 데이터 다시 불러오기</button>
         </div>
       </div>
       <div class="summary-box">
@@ -512,6 +528,7 @@ def build_html(items):
     const resultMeta = document.getElementById("resultMeta");
     const totalCount = document.getElementById("totalCount");
     const resetButton = document.getElementById("resetButton");
+    const refreshPageButton = document.getElementById("refreshPageButton");
 
     function fillOptions(select, values, label) {
       select.innerHTML = `<option value="">전체 ${label}</option>` +
@@ -593,6 +610,12 @@ def build_html(items):
       applyFilters();
     }
 
+    function reloadLatestPage() {
+      const url = new URL(window.location.href);
+      url.searchParams.set("v", Date.now().toString());
+      window.location.replace(url.toString());
+    }
+
     fillOptions(controls.field, fields, "지원분야");
     fillOptions(controls.ministry, ministries, "소관부처·지자체");
     fillOptions(controls.agency, agencies, "사업수행기관");
@@ -603,6 +626,7 @@ def build_html(items):
       control.addEventListener("change", applyFilters);
     });
     resetButton.addEventListener("click", resetFilters);
+    refreshPageButton.addEventListener("click", reloadLatestPage);
     applyFilters();
   </script>
 </body>
