@@ -12,7 +12,7 @@ from urllib.request import Request, urlopen
 
 BASE_URL = "https://www.bizinfo.go.kr"
 LIST_URL = BASE_URL + "/sii/siia/selectSIIA200View.do?rows=15&cpage={page}"
-OUTPUT_FILE = Path(__file__).with_name("web_crawling.html")
+OUTPUT_FILE = Path(__file__).with_name("index.html")
 PAGE_START = 1
 PAGE_END = 20
 
