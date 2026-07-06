@@ -22,10 +22,10 @@ jobs:
           python-version: "3.x"
 
       - name: Regenerate crawling page
-        run: python3 crawling/web_crawling.py
+        run: python3 web_crawling.py
 
       - name: Commit updated page
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: Refresh crawling page data
-          file_pattern: crawling/index.html
+          file_pattern: index.html
