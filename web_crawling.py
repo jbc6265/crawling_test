@@ -464,6 +464,10 @@ def build_html(items):
         </div>
         <div class="filter-field">
           <label>&nbsp;</label>
+          <button id="searchButton" type="button">조회</button>
+        </div>
+        <div class="filter-field">
+          <label>&nbsp;</label>
           <button id="resetButton" type="button" class="secondary">필터 초기화</button>
         </div>
       </section>
@@ -527,6 +531,7 @@ def build_html(items):
     const emptyState = document.getElementById("emptyState");
     const resultMeta = document.getElementById("resultMeta");
     const totalCount = document.getElementById("totalCount");
+    const searchButton = document.getElementById("searchButton");
     const resetButton = document.getElementById("resetButton");
     const refreshPageButton = document.getElementById("refreshPageButton");
 
@@ -625,6 +630,7 @@ def build_html(items):
       control.addEventListener("input", applyFilters);
       control.addEventListener("change", applyFilters);
     });
+    searchButton.addEventListener("click", applyFilters);
     resetButton.addEventListener("click", resetFilters);
     refreshPageButton.addEventListener("click", reloadLatestPage);
     applyFilters();
