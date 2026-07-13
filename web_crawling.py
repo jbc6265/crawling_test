@@ -6,6 +6,7 @@ from datetime import datetime
 from html import escape, unescape
 from html.parser import HTMLParser
 from pathlib import Path
+from urllib.error import URLError
 from urllib.parse import urljoin
 from urllib.request import Request, urlopen
 
@@ -15,6 +16,9 @@ LIST_URL = BASE_URL + "/sii/siia/selectSIIA200View.do?rows=15&cpage={page}"
 OUTPUT_FILE = Path(__file__).with_name("index.html")
 PAGE_START = 1
 PAGE_END = 20
+REQUEST_TIMEOUT = 60
+FETCH_RETRIES = 3
+FETCH_RETRY_DELAY = 5
 
 
 class BizInfoTableParser(HTMLParser):
@@ -79,13 +83,30 @@ def fetch_page(page):
     request = Request(
         url,
         headers={
-            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X) AppleWebKit/537.36",
+            "User-Agent": (
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/126.0.0.0 Safari/537.36"
+            ),
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
             "Accept-Language": "ko-KR,ko;q=0.9,en;q=0.8",
+            "Connection": "close",
         },
     )
     context = ssl._create_unverified_context()
-    with urlopen(request, timeout=20, context=context) as response:
-        return response.read().decode("utf-8", "ignore")
+    last_error = None
+    for attempt in range(1, FETCH_RETRIES + 1):
+        try:
+            with urlopen(request, timeout=REQUEST_TIMEOUT, context=context) as response:
+                return response.read().decode("utf-8", "ignore")
+        except (TimeoutError, URLError) as error:
+            last_error = error
+            if attempt == FETCH_RETRIES:
+                break
+            wait_seconds = FETCH_RETRY_DELAY * attempt
+            print(f"  접속 실패({attempt}/{FETCH_RETRIES}): {error}. {wait_seconds}초 후 재시도")
+            time.sleep(wait_seconds)
+    raise RuntimeError(f"{page}페이지 수집 실패: {last_error}") from last_error
 
 
 def parse_page(html, page):
